@@ -70,18 +70,18 @@ decomp <- function(fdat, aet, ncohrt,fc,dry, tyl = rep(0,17), C.mat){
   #by C.mat[,6]. This fraction is based on the lignin content of leaves.
   for(i in 1:16){
     if(tyl[i]==0) next
-      ncohrt = ncohrt + 1
-      if(ncohrt>100) print("ncohrt error")
-      C.mat[ncohrt,1] = tyl[i] * fdat[i,10]
-      C.mat[ncohrt,2] = tyl[i] * fdat[i,2]
+    ncohrt = ncohrt + 1
+    if(ncohrt>100) print("ncohrt error")
+    C.mat[ncohrt,1] = tyl[i] * fdat[i,10]
+    C.mat[ncohrt,2] = tyl[i] * fdat[i,2]
 
-      C.mat[ncohrt,3:9] = as.matrix(fdat[i,3:9])
-      C.mat[ncohrt,10] = as.matrix(tyl[i] * fdat[i,10])
-      C.mat[ncohrt,11] = fdat[i,2]
-      C.mat[ncohrt,12] = fdat[i,7] * 1.7039 + .0955
-      if(C.mat[ncohrt,5]==14) C.mat[ncohrt,12]=.3
-      if(C.mat[ncohrt,5]==15) C.mat[ncohrt,12]=.3
-      if(C.mat[ncohrt,5]==16) C.mat[ncohrt,12]=.3
+    C.mat[ncohrt,3:9] = as.matrix(fdat[i,3:9])
+    C.mat[ncohrt,10] = as.matrix(tyl[i] * fdat[i,10])
+    C.mat[ncohrt,11] = fdat[i,2]
+    C.mat[ncohrt,12] = fdat[i,7] * 1.7039 + .0955
+    if(C.mat[ncohrt,5]==14) C.mat[ncohrt,12]=.3
+    if(C.mat[ncohrt,5]==15) C.mat[ncohrt,12]=.3
+    if(C.mat[ncohrt,5]==16) C.mat[ncohrt,12]=.3
   }
 
   #calculate decay multiplier, simulating effect of gaps on decay
@@ -128,9 +128,9 @@ decomp <- function(fdat, aet, ncohrt,fc,dry, tyl = rep(0,17), C.mat){
           C.mat[1,2] = C.mat[1,2] + C.mat[i,11] * (C.mat[i,1] - wtloss)
           C.mat[i,1] = 0
         }else{
-        #FFW - temporary variable assigned to well decayed wood cohort
-        ffw = ffw + C.mat[i,1] - wtloss
-        C.mat[i,1] = 0
+          #FFW - temporary variable assigned to well decayed wood cohort
+          ffw = ffw + C.mat[i,1] - wtloss
+          C.mat[i,1] = 0
         }
       }
       #update cohorts
@@ -163,13 +163,27 @@ decomp <- function(fdat, aet, ncohrt,fc,dry, tyl = rep(0,17), C.mat){
   #calculate total soil respiration
   sco2 = fco2+hco2
   if(sco2<0) browser()
+
   #remove transferred cohorts
+  #ix = 0
+  #for(i in 1:ncohrt){
+  #  if(C.mat[i,1]==0) ix = ix + 1
+  #  C.mat[(i-ix),1:12] = C.mat[i,1:12]
+  #}
+
+
+  # New transfer method AMW
   ix = 0
   for(i in 1:ncohrt){
-    if(C.mat[i,1]==0) ix = ix + 1
-    C.mat[(i-ix),1:12] = C.mat[i,1:12]
+    if(C.mat[i,1] == 0){
+      C.mat = C.mat[-i,]
+      C.mat = rbind(C.mat, rep(0, times = 15))
+      ix = ix + 1
+    }
   }
+
   ncohrt = ncohrt - ix
+
   #create new well decayed wood cohort
   if(ffw != 0 ){
     ncohrt = ncohrt + 1
@@ -202,7 +216,6 @@ decomp <- function(fdat, aet, ncohrt,fc,dry, tyl = rep(0,17), C.mat){
   return(list(ff=ff, availn=availn, tyln = tyln, hcn=hcn, sco2=sco2, ncohrt=ncohrt,
               C.mat=C.mat))
 }
-
 
 
 

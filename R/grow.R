@@ -194,7 +194,7 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
         if(any(which(iht>700))) print("trees too tall")
 
         #calculate and sum leaf biomass for trees of approx. the same height
-        sumla[iht] = sumla[iht] + ((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret)
+        sumla[iht] = sumla[iht] + sum((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret)
       nl = nl + ntrees[j]
     }
 
@@ -258,7 +258,7 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
         #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
 
         nogro[nl:nu] = ifelse(frost[i] > rt[1], 0, nogro[nl:nu] - 1)
-        nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
+        nogro[nl:nu] = ifelse(dinc >= .1*dncmax, 0, nogro[nl:nu] - 1)
 
         #calculate woody biomass (kg) before incrementing diameter
         ab1 = .1193 * dbh[nl:nu] ^ 2.393
