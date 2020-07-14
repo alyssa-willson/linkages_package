@@ -164,24 +164,20 @@ decomp <- function(fdat, aet, ncohrt,fc,dry, tyl = rep(0,17), C.mat){
   sco2 = fco2+hco2
   if(sco2<0) browser()
 
-  #remove transferred cohorts
-  #ix = 0
-  #for(i in 1:ncohrt){
-  #  if(C.mat[i,1]==0) ix = ix + 1
-  #  C.mat[(i-ix),1:12] = C.mat[i,1:12]
-  #}
-
-
-  # New transfer method AMW
+  # remove transferred cohorts
   ix = 0
   for(i in 1:ncohrt){
     if(C.mat[i,1] == 0){
+      # Remove row if there's no C remaining
       C.mat = C.mat[-i,]
+      # Replace the row with an empty one to maintain the same number of rows
       C.mat = rbind(C.mat, rep(0, times = 15))
+      # Increment counter
       ix = ix + 1
     }
   }
 
+  # adjust number of cohorts
   ncohrt = ncohrt - ix
 
   #create new well decayed wood cohort

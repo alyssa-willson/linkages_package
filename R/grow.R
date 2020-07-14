@@ -42,113 +42,113 @@ grow <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
   gf.vec.means <- matrix(NA, nrow=nspec, ncol = 4)
   algf.save <- matrix(NA,max.ind,nspec)
   if(ntot != 0){
-  if(ntot > max.ind) print("too many trees -- grow")
+    if(ntot > max.ind) print("too many trees -- grow")
 
-  #initialize canopy leaf biomass profile
-  sumla = matrix(0,1,max.ind)
+    #initialize canopy leaf biomass profile
+    sumla = matrix(0,1,max.ind)
 
 
-  #loop for calculating canopy profile
-  nl = 1
-  for(j in 1:nspec){
-    if(ntrees[j]==0) next
-    nu = nl + ntrees[j] - 1
-    ret = frt[j]
-    for(k in nl:nu){
-      age = iage[k]
-      if(age < ret) ret = age
+    #loop for calculating canopy profile
+    nl = 1
+    for(j in 1:nspec){
+      if(ntrees[j]==0) next
+      nu = nl + ntrees[j] - 1
+      ret = frt[j]
+      for(k in nl:nu){
+        age = iage[k]
+        if(age < ret) ret = age
 
-      #calculate height profile
-      iht = ((b2[j]*dbh[k]-b3[j]*dbh[k]^2)/10)+1
-      if(iht>700) print("trees too tall")
+        #calculate height profile
+        iht = ((b2[j]*dbh[k]-b3[j]*dbh[k]^2)/10)+1
+        if(iht>700) print("trees too tall")
 
-      #calculate and sum leaf biomass for trees of approx. the same height
-      sumla[iht] = sumla[iht] + ((((slta[j] + sltb[j] * dbh[k]) / 2) ^ 2) * 3.14 * fwt[j] * ret)
+        #calculate and sum leaf biomass for trees of approx. the same height
+        sumla[iht] = sumla[iht] + ((((slta[j] + sltb[j] * dbh[k]) / 2) ^ 2) * 3.14 * fwt[j] * ret)
+      }
+      nl = nl + ntrees[j]
     }
-    nl = nl + ntrees[j]
-  }
 
-  #calculate cumulative leaf biomass down through the canopy
-  #for(j in 1:699){
+    #calculate cumulative leaf biomass down through the canopy
+    #for(j in 1:699){
     j1 = 700-1:699
     sumla[j1] = sumla[j1] + sumla[j1 + 1]
-  #}
+    #}
 
-  #main loop for calculating diameter increment
-  nl = 1
-  for(i in 1:nspec){
-    if(ntrees[i] == 0) next
-    nu = nl + ntrees[i] - 1
-    for(j in nl:nu){
-      #calulate leaf biomass of all taller trees (slar)
-      ht = b2[i]*dbh[j] - b3[i]*dbh[j]^2
-      iht = ht/10 + 2
-      if(iht < 1) iht = 1 #added to avoid error with sumla
-      slar = sumla[iht]
-      if(is.na(slar)) slar <- sumla[which.max(!is.na(sumla))]
+    #main loop for calculating diameter increment
+    nl = 1
+    for(i in 1:nspec){
+      if(ntrees[i] == 0) next
+      nu = nl + ntrees[i] - 1
+      for(j in nl:nu){
+        #calulate leaf biomass of all taller trees (slar)
+        ht = b2[i]*dbh[j] - b3[i]*dbh[j]^2
+        iht = ht/10 + 2
+        if(iht < 1) iht = 1 #added to avoid error with sumla
+        slar = sumla[iht]
+        if(is.na(slar)) slar <- sumla[which.max(!is.na(sumla))]
 
-      #calculate available light to this tree (% full sunlight)
-      al = 1 * exp(-slar/93750)
+        #calculate available light to this tree (% full sunlight)
+        al = 1 * exp(-slar/93750)
 
-      #calculate available light multiplier if tree is shade intolerant
-      if(itol[i] >= 2) {
-        algf = 2.24 * (1 - exp(-1.136 * (al - .08)))
-      } else {
-        algf = 1 - exp(-4.64 * (al - .05))
+        #calculate available light multiplier if tree is shade intolerant
+        if(itol[i] >= 2) {
+          algf = 2.24 * (1 - exp(-1.136 * (al - .08)))
+        } else {
+          algf = 1 - exp(-4.64 * (al - .05))
+        }
+
+        if(length(algf)>1){
+          #print(algf)
+          algf = algf[1]
+        }
+
+        if(is.na(algf)){
+          browser()
+          algf <- 1
+        }
+
+        if(algf < 0) algf = 0
+        algf.save[j,i] <- algf
+
+        #calculate maximum tree volume
+        gr = (137 + .25 *(( b2[i]^2 )/ b3[i])) * (.5 * b2[i] / b3[i])
+
+        #calculate diameter increment under optimal conditions
+        dncmax = g[i] * dbh[j] * (1 - (137 * dbh[j] + b2[i] * dbh[j]^2 - b3[i] * (dbh[j]^3)) / gr) / (274 + 3 * b2[i] * dbh[j] - 4 * b3[i] * dbh[j]^2)
+
+        #choose smallest growth multiplier for this tree
+        gf = min(algf, smgf[i], sngf[i], degdgf[i])
+        if(is.na(gf)) gf = 0
+
+        gf.vec[j,i,1:4] = c(algf, smgf[i], sngf[i], degdgf[i])
+        #print(gf==gf.vec)
+        #print(gf.vec)
+
+        #reduce diameter increment to the extent that conditions are less than optimum for growth
+        dinc = dncmax*gf
+        #if(dinc < .1) dinc = .1
+
+        #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
+        #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
+        if(dinc >= .25*dncmax) nogro[j] = 0
+        if(dinc < .25*dncmax) nogro[j] = nogro[j] - 1
+
+        #calculate woody biomass (kg) before incrementing diameter
+        ab1 = .1193 * dbh[j] ^ 2.393
+
+        #increment diameter
+        dbh[j] = dbh[j] + dinc
+
+        #if(dbh[j]>10) print(i)
+        #calculate woody biomass after incrementing diameter
+        ab2 = .1193 * dbh[j] ^ 2.393
+
+        #calculate net increase in woody biomass (aboveground woody production in kg)
+        awp[j] = ab2 - ab1
       }
-
-      if(length(algf)>1){
-        #print(algf)
-        algf = algf[1]
-      }
-
-      if(is.na(algf)){
-        browser()
-        algf <- 1
-      }
-
-      if(algf < 0) algf = 0
-      algf.save[j,i] <- algf
-
-      #calculate maximum tree volume
-      gr = (137 + .25 *(( b2[i]^2 )/ b3[i])) * (.5 * b2[i] / b3[i])
-
-      #calculate diameter increment under optimal conditions
-      dncmax = g[i] * dbh[j] * (1 - (137 * dbh[j] + b2[i] * dbh[j]^2 - b3[i] * (dbh[j]^3)) / gr) / (274 + 3 * b2[i] * dbh[j] - 4 * b3[i] * dbh[j]^2)
-
-      #choose smallest growth multiplier for this tree
-      gf = min(algf, smgf[i], sngf[i], degdgf[i])
-      if(is.na(gf)) gf = 0
-
-      gf.vec[j,i,1:4] = c(algf, smgf[i], sngf[i], degdgf[i])
-      #print(gf==gf.vec)
-      #print(gf.vec)
-
-      #reduce diameter increment to the extent that conditions are less than optimum for growth
-      dinc = dncmax*gf
-      #if(dinc < .1) dinc = .1
-
-      #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
-      #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
-      if(dinc >= .25*dncmax) nogro[j] = 0
-      if(dinc < .25*dncmax) nogro[j] = nogro[j] - 1
-
-      #calculate woody biomass (kg) before incrementing diameter
-      ab1 = .1193 * dbh[j] ^ 2.393
-
-      #increment diameter
-      dbh[j] = dbh[j] + dinc
-
-      #if(dbh[j]>10) print(i)
-      #calculate woody biomass after incrementing diameter
-      ab2 = .1193 * dbh[j] ^ 2.393
-
-      #calculate net increase in woody biomass (aboveground woody production in kg)
-      awp[j] = ab2 - ab1
+      gf.vec.means[i,1:4] = colMeans(gf.vec[,i,1:4]) #matrix(NA, nrow=nspec, ncol = 4)
+      nl = nl + ntrees[i]
     }
-    gf.vec.means[i,1:4] = colMeans(gf.vec[,i,1:4]) #matrix(NA, nrow=nspec, ncol = 4)
-    nl = nl + ntrees[i]
-  }
   }
   return(list(ntrees = ntrees, dbh = dbh, awp = awp, nogro = nogro, gf.vec = gf.vec.means, algf.save = algf.save))
 }
@@ -161,7 +161,7 @@ grow <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
 #
 
 grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
-                 degdgf,smgf,sngf,frost,rt,iage,nogro){
+                     degdgf,smgf,sngf,frost,rt,iage,nogro){
   #initialize wood production
   awp = matrix(0,1,max.ind)
   algf.save <- matrix(NA,max.ind,nspec)
@@ -184,25 +184,25 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
       if(ntrees[j]==0) next
       nu = nl + ntrees[j] - 1
       ret = frt[j]
-        age = iage[nl:nu]
-        ret <- matrix(frt[j],length(age))
-        ret[age < ret] = age[age < ret]
+      age = iage[nl:nu]
+      ret <- matrix(frt[j],length(age))
+      ret[age < ret] = age[age < ret]
 
-        #calculate height profile
-        iht = ((b2[j]*dbh[nl:nu]-b3[j]*dbh[nl:nu]^2)/10)+1
-        iht[iht<1] <- 1
-        if(any(which(iht>700))) print("trees too tall")
+      #calculate height profile
+      iht = ((b2[j]*dbh[nl:nu]-b3[j]*dbh[nl:nu]^2)/10)+1
+      iht[iht<1] <- 1
+      if(any(which(iht>700))) print("trees too tall")
 
-        #calculate and sum leaf biomass for trees of approx. the same height
-        sumla[iht] = sumla[iht] + sum((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret)
+      #calculate and sum leaf biomass for trees of approx. the same height
+      sumla[iht] = sumla[iht] + sum(((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret))
       nl = nl + ntrees[j]
     }
 
     #calculate cumulative leaf biomass down through the canopy
     #consider revisiting
-    j1 = 700-1:699
-    sumla[j1] = sumla[j1] + sumla[j1 + 1]
-    #sumla <- rev(cumsum(rev(sumla)))
+    #j1 = 700-1:699
+    #sumla[j1] = sumla[j1] + sumla[j1 + 1]
+    sumla <- rev(cumsum(rev(sumla)))
 
     #main loop for calculating diameter increment
     nl = 1
@@ -210,69 +210,74 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
     for(i in 1:nspec){
       if(ntrees[i] == 0) next
       nu = nl + ntrees[i] - 1
-        #calulate leaf biomass of all taller trees (slar)
-        ht = b2[i]*dbh[nl:nu] - b3[i]*dbh[nl:nu]^2
-        iht = ht/10 + 2
-        iht[iht < 1] = 1 #added to avoid error with sumla
-        slar = sumla[iht]
+      #calulate leaf biomass of all taller trees (slar)
+      ht = b2[i]*dbh[nl:nu] - b3[i]*dbh[nl:nu]^2
+      iht = ht/10 + 2
+      iht[iht < 1] = 1 #added to avoid error with sumla
+      slar = sumla[iht]
 
 
-        #calculate available light to this tree (% full sunlight)
-        al = 1 * exp(-slar/93750)
+      #calculate available light to this tree (% full sunlight)
+      al = 1 * exp(-slar/93750)
 
-        #calculate available light multiplier if tree is shade intolerant
-        if(itol[i] >= 2) {
-          algf = 2.24 * (1 - exp(-1.136 * (al - .08)))
-        } else {
-          algf = 1 - exp(-4.64 * (al - .05))
-        }
+      #calculate available light multiplier if tree is shade intolerant
+      if(itol[i] >= 2) {
+        algf = 2.24 * (1 - exp(-1.136 * (al - .08)))
+      } else {
+        algf = 1 - exp(-4.64 * (al - .05))
+      }
 
-        algf[algf < 0] = 0
+      algf[algf < 0] = 0
 
-        #calculate maximum tree volume
-        gr = (137 + .25 *(( b2[i]^2 )/ b3[i])) * (.5 * b2[i] / b3[i])
+      #calculate maximum tree volume
+      gr = (137 + .25 *(( b2[i]^2 )/ b3[i])) * (.5 * b2[i] / b3[i])
 
-        #calculate diameter increment under optimal conditions
-        dncmax = g[i] * dbh[nl:nu] * (1 - (137 * dbh[nl:nu] + b2[i] * dbh[nl:nu]^2 - b3[i] * (dbh[nl:nu]^3)) / gr) / (274 + 3 * b2[i] * dbh[nl:nu] - 4 * b3[i] * dbh[nl:nu]^2)
+      #calculate diameter increment under optimal conditions
+      dncmax = g[i] * dbh[nl:nu] * (1 - (137 * dbh[nl:nu] + b2[i] * dbh[nl:nu]^2 - b3[i] * (dbh[nl:nu]^3)) / gr) / (274 + 3 * b2[i] * dbh[nl:nu] - 4 * b3[i] * dbh[nl:nu]^2)
 
-        #choose smallest growth multiplier for this tree
-        #browser()
-        gf = apply(rbind(algf, smgf[i], sngf[i], degdgf[i]),2,min)
-        gf[is.na(gf)] <- 0
+      #choose smallest growth multiplier for this tree
+      #browser()
+      gf = apply(rbind(algf, smgf[i], sngf[i], degdgf[i]),2,min)
+      gf[is.na(gf)] <- 0
 
-        algf.save[nl:nu,i] <- algf
+      algf.save[nl:nu,i] <- algf
 
-        gf.vec[i,1:4] <- c(mean(algf), smgf[i], sngf[i], degdgf[i])
+      gf.vec[i,1:4] <- c(mean(algf), smgf[i], sngf[i], degdgf[i])
 
-          #c(algf, rep(smgf[i],length(nl:nu)),
-                        #        rep(sngf[i],length(nl:nu)),
-                        #        rep(degdgf[i],length(nl:nu)))
-        #print(gf==gf.vec)
-        #print(gf.vec)
+      #c(algf, rep(smgf[i],length(nl:nu)),
+      #        rep(sngf[i],length(nl:nu)),
+      #        rep(degdgf[i],length(nl:nu)))
+      #print(gf==gf.vec)
+      #print(gf.vec)
 
-        #reduce diameter increment to the extent that conditions are less than optimum for growth
-        dinc = dncmax*gf
-        #if(dinc < .1) dinc = .1
+      #reduce diameter increment to the extent that conditions are less than optimum for growth
+      dinc = dncmax*gf
+      #if(dinc < .1) dinc = .1
 
-        #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
-        #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
+      #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
+      #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
 
-        nogro[nl:nu] = ifelse(frost[i] > rt[1], 0, nogro[nl:nu] - 1)
-        nogro[nl:nu] = ifelse(dinc >= .1*dncmax, 0, nogro[nl:nu] - 1)
+      # If the trees are too chilly, make them not grow
+      if(frost[i] > rt[1]) dinc = 0
+      # Flag as NOGRO only because of slow growth
+      nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
 
-        #calculate woody biomass (kg) before incrementing diameter
-        ab1 = .1193 * dbh[nl:nu] ^ 2.393
+      #nogro[nl:nu] = ifelse(frost[i] > rt[1], 0, nogro[nl:nu] - 1)
+      #nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
 
-        #increment diameter
-        dbh[nl:nu] = dbh[nl:nu] + dinc
+      #calculate woody biomass (kg) before incrementing diameter
+      ab1 = .1193 * dbh[nl:nu] ^ 2.393
 
-        #if(dbh[j]>10) print(i)
-        #calculate woody biomass after incrementing diameter
-        ab2 = .1193 * dbh[nl:nu] ^ 2.393
+      #increment diameter
+      dbh[nl:nu] = dbh[nl:nu] + dinc
 
-        #calculate net increase in woody biomass (aboveground woody production in kg)
-        awp[nl:nu] = ab2 - ab1
-        npp.spp[i] <- sum(awp[nl:nu])
+      #if(dbh[j]>10) print(i)
+      #calculate woody biomass after incrementing diameter
+      ab2 = .1193 * dbh[nl:nu] ^ 2.393
+
+      #calculate net increase in woody biomass (aboveground woody production in kg)
+      awp[nl:nu] = ab2 - ab1
+      npp.spp[i] <- sum(awp[nl:nu])
 
       nl = nl + ntrees[i]
 
@@ -283,4 +288,3 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
   return(list(ntrees = ntrees,npp.spp=npp.spp, dbh = dbh,
               awp = awp, nogro = nogro, gf.vec = gf.vec, algf.save = algf.save))
 }
-
