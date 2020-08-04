@@ -9,7 +9,7 @@ output.check <- function(linkages.input, outdir){
   }
   if(max(ag.biomass) > 50 ) {
     bio <- print(paste('Large biomass. Possible there are too many species? Or need to calibrate parameters? Max Biomass =',
-                                        max(ag.biomass)))
+                       max(ag.biomass)))
   }
   if(max(iage.save) < nyear/3) {
     age <- print(paste('Low ages. Max Age =', max(iage.save)))

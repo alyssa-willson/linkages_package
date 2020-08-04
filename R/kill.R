@@ -73,15 +73,15 @@ kill <- function(nspec, ntrees,slta,sltb,dbh,agemx,ksprt,sprtmn,sprtmx,iage,
 
         #flag dead trees
         dbh[k] = -1
-       } else {
-          if(nogro[k]<=-1){
-            #age.tab <- as.matrix(table(iage))
-            #rm.p <- pexp(iage[k],1/(agemx[i]/2))
-            #yfl <- rm.p*as.numeric(age.tab[iage[k]+1,])
+      } else {
+        if(nogro[k]<=-1){
+          #age.tab <- as.matrix(table(iage))
+          #rm.p <- pexp(iage[k],1/(agemx[i]/2))
+          #yfl <- rm.p*as.numeric(age.tab[iage[k]+1,])
 
-            yfl <- runif(1,0,1)
+          yfl <- runif(1,0,1)
 
-            if(yfl > .75){
+          if(yfl > .75){
             ntrees[i] = ntrees[i] - 1
 
             #check to see if dead tree can sump sprout increment skprt if tree can sprout
@@ -94,8 +94,8 @@ kill <- function(nspec, ntrees,slta,sltb,dbh,agemx,ksprt,sprtmn,sprtmx,iage,
 
             #flag dead trees
             dbh[k] = -1
-            }
           }
+        }
       }
       #calculate leaf litter by quality class in t/ha if the tree is slow growing but didn't di, leaf litter is halved
       #if the tree died, total leaf biomass is returned to the soil
@@ -141,17 +141,17 @@ kill <- function(nspec, ntrees,slta,sltb,dbh,agemx,ksprt,sprtmn,sprtmx,iage,
     if(ntot1 > max.ind) print("too many trees -- kill")
 
     #eliminate dead trees
-      dbh[ntot1:nu] = 0
-      iage[ntot1:nu] = 0
-      nogro[ntot1:nu] = 0
+    dbh[ntot1:nu] = 0
+    iage[ntot1:nu] = 0
+    nogro[ntot1:nu] = 0
   }
 
-#   if(length(which(dbh>0)) < sum(ntrees)){
-#     ntrees[4] <- ntrees[4] - length(ntot1:nu) + 1
-#
-#   }
-#  if(ntrees[4]<0) ntrees[4]=0cd
-if(length(which(dbh>0)) != sum(ntrees)) browser()
+  #   if(length(which(dbh>0)) < sum(ntrees)){
+  #     ntrees[4] <- ntrees[4] - length(ntot1:nu) + 1
+  #
+  #   }
+  #  if(ntrees[4]<0) ntrees[4]=0cd
+  if(length(which(dbh>0)) != sum(ntrees)) browser()
 
   return(list(ntrees = ntrees, dbh = dbh, iage = iage, nogro = nogro,
               tyl = tyl, ksprt = ksprt))

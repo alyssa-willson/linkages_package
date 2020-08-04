@@ -41,4 +41,3 @@ library(microbenchmark)
 #test
 temp.vec <- c(1,2,3,4,5,6,7,8,9,10,11,12)
 microbenchmark( tempe(temp.vec), tempe.old(temp.vec) )
-

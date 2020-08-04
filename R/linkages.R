@@ -174,7 +174,6 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
                          cm1 = spp.params$CM1, cm3 = spp.params$CM3, cm2 = spp.params$CM2,
                          cm4 = spp.params$CM4, cm5 = spp.params$CM5, nspec = nspec)
 
-
       smgf <- unlist(gmult.out$smgf, use.names = FALSE) #soil moisture growth factor
       sngf <- unlist(gmult.out$sngf, use.names = FALSE) #soil nitrogen growth factor
       degdgf <- unlist(gmult.out$degdgf, use.names = FALSE) #degree day growth factor
@@ -228,7 +227,6 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
       #browser()
       gf.vec.save[1:nspec,1:4,i,k] <- grow.out$gf.vec
       algf.save.keep[,,i,k] <- grow.out$algf.save
-
       # gf.vec.save[,i,k] <- gf.vec
 
       #if(dbh[sum(ntrees)]==0) browser()
