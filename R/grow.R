@@ -177,6 +177,29 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
     #initialize canopy leaf biomass profile
     sumla = matrix(0,1,700)
 
+    #spp.ind = c()
+    #for (k in 1:nspec){
+    #  spp.ind = c(spp.ind, rep(k, ntrees[k]))
+    #}
+
+    #loop for calculating canopy profile tree-by-tree
+    #for (j in 1:ntot){
+
+      # gather information about this tree
+      #sp = spp.ind[j]
+      #ret = frt[sp]
+      #age = iage[j]
+      #if (age < ret) ret = age
+
+      # calculate height profile
+      #iht = ((b2[sp]*dbh[j]-b3[sp]*dbh[j]^2)/10)+1
+      #if (iht < 1) iht = 1
+      #if (iht > 700) print("trees too tall")
+
+      #calculate leaf biomass for tree and add it to the appropriate canopy level
+      #sumla[iht] = sumla[iht] + ((((slta[sp] + sltb[sp] * dbh[j]) / 2) ^ 2) * 3.14 * fwt[sp] * ret)
+    #}
+
 
     #loop for calculating canopy profile
     nl = 1
@@ -184,18 +207,26 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
       if(ntrees[j]==0) next
       nu = nl + ntrees[j] - 1
       ret = frt[j]
-      age = iage[nl:nu]
-      ret <- matrix(frt[j],length(age))
-      ret[age < ret] = age[age < ret]
+      for(k in nl:nu){
+        age = iage[k]
+        ret <- matrix(frt[j],length(age))
+        ret[age < ret] = age[age < ret]
 
       #calculate height profile
-      iht = ((b2[j]*dbh[nl:nu]-b3[j]*dbh[nl:nu]^2)/10)+1
-      iht[iht<1] <- 1
-      if(any(which(iht>700))) print("trees too tall")
+        iht = (b2[j]*dbh[k]-b3[j]*dbh[k]^2)/10+1
+        iht[iht<1] <- 1
+        if(any(which(iht>700))) print("trees too tall")
 
-      #calculate and sum leaf biomass for trees of approx. the same height
-      sumla[iht] = sumla[iht] + sum(((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret))
-      nl = nl + ntrees[j]
+              #calculate and sum leaf biomass for trees of approx. the same height
+        sumla[iht] = sumla[iht] + sum(((((slta[j] + sltb[j] * dbh[k]) / 2) ^ 2) * 3.14 * fwt[j] * ret))
+      }
+    #  age = iage[nl:nu]
+    #  ret = matrix(frt[j], length(age))
+    #  iht = (b2[j] * dbh[nl:nu] - b3[j] * dbh[nl:nu]^2) / 10 + 1
+    #  iht[iht <1] = 1
+    #  if(any(which(iht>700))) print('trees too tall')
+    #  sumla[iht] = sumla[iht] + sum(((((slta[j] + sltb[j] * dbh[nl:nu]) / 2) ^ 2) * 3.14 * fwt[j] * ret))
+    #  nl = nl + ntrees[j]
     }
 
     #calculate cumulative leaf biomass down through the canopy
@@ -254,16 +285,19 @@ grow.opt <- function(max.ind,nspec,ntrees,frt,slta,sltb,dbh,fwt, b2,b3, itol,g,
       dinc = dncmax*gf
       #if(dinc < .1) dinc = .1
 
-      #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
-      #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
+        #check if increment is less than minimum required for growth. if dinc less than 1 mm or 10% of ndcmax or if january temp is less than frost tolerance, flag tree in nogro
+        #if(dinc < .1*dncmax | frost[i] > rt[1]) dinc = 0
 
-      # If the trees are too chilly, make them not grow
-      if(frost[i] > rt[1]) dinc = 0
-      # Flag as NOGRO only because of slow growth
-      nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
+        # If the trees are too chilly, make them not grow
+        if(frost[i] > rt[1]) dinc = 0
+        # Flag as NOGRO only because of slow growth
+        nogro[nl:nu] = ifelse(dinc >= 0.1 * dncmax, 0, nogro[nl:nu] - 1)
 
-      #nogro[nl:nu] = ifelse(frost[i] > rt[1], 0, nogro[nl:nu] - 1)
-      #nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
+        #nogro[nl:nu] = ifelse(frost[i] > rt[1], 0, nogro[nl:nu] - 1)
+        #nogro[nl:nu] = ifelse(dinc >= .15*dncmax, 0, nogro[nl:nu] - 1)
+
+        #calculate woody biomass (kg) before incrementing diameter
+        ab1 = .1193 * dbh[nl:nu] ^ 2.393
 
       #calculate woody biomass (kg) before incrementing diameter
       ab1 = .1193 * dbh[nl:nu] ^ 2.393

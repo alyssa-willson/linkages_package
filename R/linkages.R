@@ -84,7 +84,7 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
   ntrees.birth <- array(0,dim=c(nspec,nyear,iplot))
   ntrees.grow <- array(0,dim=c(nspec,nyear,iplot))
   ntrees.kill <- array(0,dim=c(nspec,nyear,iplot))
- # gf.vec.save <- array(0,dim=c(4,nyear,iplot))
+  # gf.vec.save <- array(0,dim=c(4,nyear,iplot))
   bar <- array(0,dim=c(nspec,nyear,iplot))
   algf.save.keep<- array(NA,dim=c(max.ind,nspec,nyear,iplot))
   nogro.save <- array(0,dim=c(max.ind,nyear,iplot))
@@ -97,17 +97,17 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
     if(restart == FALSE){
 
-    plotin.out <- plotin(iplot = k, basesc = basesc, basesn = basesn, max.ind = max.ind,
-                         nspec = nspec) # initializes storage matrices with zeros for each plot
+      plotin.out <- plotin(iplot = k, basesc = basesc, basesn = basesn, max.ind = max.ind,
+                           nspec = nspec) # initializes storage matrices with zeros for each plot
 
-    ncohrt <- unlist(plotin.out$ncohrt, use.names = FALSE)
-    tyl <- unlist(plotin.out$tyl, use.names = FALSE)
-    C.mat <- unlist(plotin.out$C.mat, use.names = FALSE)
-    ntrees <- unlist(plotin.out$ntrees, use.names = FALSE)
-    dbh <- unlist(plotin.out$dbh, use.names = FALSE)
-    nogro <- unlist(plotin.out$nogro, use.names = FALSE)
-    ksprt <- unlist(plotin.out$ksprt, use.names = FALSE)
-    iage <- unlist(plotin.out$iage, use.names = FALSE)
+      ncohrt <- unlist(plotin.out$ncohrt, use.names = FALSE)
+      tyl <- unlist(plotin.out$tyl, use.names = FALSE)
+      C.mat <- unlist(plotin.out$C.mat, use.names = FALSE)
+      ntrees <- unlist(plotin.out$ntrees, use.names = FALSE)
+      dbh <- unlist(plotin.out$dbh, use.names = FALSE)
+      nogro <- unlist(plotin.out$nogro, use.names = FALSE)
+      ksprt <- unlist(plotin.out$ksprt, use.names = FALSE)
+      iage <- unlist(plotin.out$iage, use.names = FALSE)
 
 
     } else {
@@ -150,7 +150,7 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
       #calculates aet
       moist.out <- moist(kyr = i, temp.vec = temp.mat[i,1:12], precip.vec = precip.mat[i,1:12],
-            fc = fc, dry = dry, bgs = bgs, egs = egs, plat = plat, clat = clat)
+                         fc = fc, dry = dry, bgs = bgs, egs = egs, plat = plat, clat = clat)
       aet <- unlist(moist.out$aet, use.names = FALSE)
       fj <- unlist(moist.out$fj, use.names = FALSE)
 
@@ -169,10 +169,11 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
       #calculates "growth multipliers"
       gmult.out <- gmult(bgs = bgs, egs = egs, availn = availn,
-                        degd = degd, dmin = spp.params$DMIN,
-                        dmax = spp.params$DMAX, d3 = spp.params$D3, fj = fj,
-                        cm1 = spp.params$CM1, cm3 = spp.params$CM3, cm2 = spp.params$CM2,
-                        cm4 = spp.params$CM4, cm5 = spp.params$CM5, nspec = nspec)
+                         degd = degd, dmin = spp.params$DMIN,
+                         dmax = spp.params$DMAX, d3 = spp.params$D3, fj = fj,
+                         cm1 = spp.params$CM1, cm3 = spp.params$CM3, cm2 = spp.params$CM2,
+                         cm4 = spp.params$CM4, cm5 = spp.params$CM5, nspec = nspec)
+
 
       smgf <- unlist(gmult.out$smgf, use.names = FALSE) #soil moisture growth factor
       sngf <- unlist(gmult.out$sngf, use.names = FALSE) #soil nitrogen growth factor
@@ -181,13 +182,13 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
       #birth subroutine
       birth.out <- birth(nspec = nspec, ntrees = ntrees, frt = spp.params$FRT, iage = iage,
-            slta = spp.params$SLTA, sltb = spp.params$SLTB, spp.num = spp.params$Spp_Number,dbh = dbh,
-            fwt = spp.params$FWT,
-            degd = degd, dmin = spp.params$DMIN, dmax = spp.params$DMAX,
-            frost = spp.params$FROST, rt = temp.mat[i,1:12], itol = spp.params$ITOL,
-            mplant = spp.params$MPLANT, nogro = nogro,
-            ksprt = ksprt, sprtnd = spp.params$SPRTND, max.ind = max.ind, smgf=smgf,
-            degdgf = degdgf)
+                         slta = spp.params$SLTA, sltb = spp.params$SLTB, spp.num = spp.params$Spp_Number,dbh = dbh,
+                         fwt = spp.params$FWT,
+                         degd = degd, dmin = spp.params$DMIN, dmax = spp.params$DMAX,
+                         frost = spp.params$FROST, rt = temp.mat[i,1:12], itol = spp.params$ITOL,
+                         mplant = spp.params$MPLANT, nogro = nogro,
+                         ksprt = ksprt, sprtnd = spp.params$SPRTND, max.ind = max.ind, smgf=smgf,
+                         degdgf = degdgf)
 
       if(is.null(unlist(birth.out$ntrees, use.names = FALSE))){
         ntrees[,i,k] <- rep(0,nspec)
@@ -208,10 +209,10 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
 
       grow.out <- grow.opt(max.ind = max.ind, nspec = nspec, ntrees = ntrees, frt = spp.params$FRT, slta = spp.params$SLTA,
-          sltb = spp.params$SLTB, dbh = dbh, fwt = spp.params$FWT, b2 = spp.params$B2,
-           b3 = spp.params$B3, itol =spp.params$ITOL, g = spp.params$G, degdgf = degdgf,
-           smgf = smgf, sngf= sngf,frost = spp.params$FROST, rt = temp.mat[i,1:12], iage = iage,
-           nogro=nogro)
+                           sltb = spp.params$SLTB, dbh = dbh, fwt = spp.params$FWT, b2 = spp.params$B2,
+                           b3 = spp.params$B3, itol =spp.params$ITOL, g = spp.params$G, degdgf = degdgf,
+                           smgf = smgf, sngf= sngf,frost = spp.params$FROST, rt = temp.mat[i,1:12], iage = iage,
+                           nogro=nogro)
 
 
       if(is.null(unlist(grow.out$ntrees, use.names = FALSE))){
@@ -224,19 +225,20 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
       dbh <- unlist(grow.out$dbh, use.names = FALSE)
       awp <- unlist(grow.out$awp, use.names = FALSE)
       nogro <- unlist(grow.out$nogro, use.names = FALSE)
-#browser()
+      #browser()
       gf.vec.save[1:nspec,1:4,i,k] <- grow.out$gf.vec
       algf.save.keep[,,i,k] <- grow.out$algf.save
-     # gf.vec.save[,i,k] <- gf.vec
+
+      # gf.vec.save[,i,k] <- gf.vec
 
       #if(dbh[sum(ntrees)]==0) browser()
 
       #kill subroutine
       kill.out<- kill(nspec = nspec, ntrees= ntrees,slta = spp.params$SLTA, sltb = spp.params$SLTB,
-           dbh = dbh, agemx = spp.params$AGEMX, ksprt = ksprt,
-           sprtmn = spp.params$SPRTMN, sprtmx = spp.params$SPRTMX, iage  = iage,
-           nogro  = nogro,tl = spp.params$TL,rtst = spp.params$RTST, fwt = spp.params$FWT,
-           max.ind = max.ind, frt = spp.params$FRT)
+                      dbh = dbh, agemx = spp.params$AGEMX, ksprt = ksprt,
+                      sprtmn = spp.params$SPRTMN, sprtmx = spp.params$SPRTMX, iage  = iage,
+                      nogro  = nogro,tl = spp.params$TL,rtst = spp.params$RTST, fwt = spp.params$FWT,
+                      max.ind = max.ind, frt = spp.params$FRT)
 
       ntrees <- unlist(kill.out$ntrees, use.names = FALSE)
       ntrees.kill[,i,k] <- unlist(kill.out$ntrees, use.names = FALSE)
@@ -250,9 +252,9 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
 
       #output subroutine
       output.out <- output(availn = availn, tyln = tyln, nspec = nspec, frt=spp.params$FRT,
-                         iage = iage,slta = spp.params$SLTA, max.ind = max.ind,
-                         sltb = spp.params$SLTB,dbh = dbh,fwt = spp.params$FWT,tyl = tyl,
-                         ntrees=ntrees,awp=awp)
+                           iage = iage,slta = spp.params$SLTA, max.ind = max.ind,
+                           sltb = spp.params$SLTB,dbh = dbh,fwt = spp.params$FWT,tyl = tyl,
+                           ntrees=ntrees,awp=awp)
 
       #conversion factors
       DEFAULT.C <- 0.48  ## mass percent C of biomass
@@ -282,13 +284,13 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
       ncohrt.save[i,k] = ncohrt
       npp.spp.save[,i,k] = (unlist(grow.out$npp.spp,use.names=FALSE) * (1 / PLOT.AREA) * (1 / yearSecs) * DEFAULT.C)
 
-    print(paste("year = ",i))
+      print(paste("year = ",i))
     }
     Rprof(NULL)
     summaryRprof()
 
 
-  print(paste("PLOT = ",k))
+    print(paste("PLOT = ",k))
   }
 
   #unit conversions for variables of interest #need to recheck more carefully later
@@ -329,8 +331,8 @@ linkages <- function(linkages.input, outdir, restart = NULL, linkages.restart = 
        som = som,bar = bar,aet.save = aet.save,nogro.save = nogro.save,
        dbh.save = dbh.save, iage.save = iage.save, C.mat = C.mat, tyl = tyl,
        ncohrt = ncohrt, area = area, water = water, ksprt = ksprt, tyl.save = tyl.save,
-      ff=ff, gf.vec.save = gf.vec.save, algf.save.keep = algf.save.keep,
-      npp.spp.save=npp.spp.save, awp.save = awp.save, file = output.file)
+       ff=ff, gf.vec.save = gf.vec.save, algf.save.keep = algf.save.keep,
+       npp.spp.save=npp.spp.save, awp.save = awp.save, file = output.file)
 
   file.exists(output.file)
 

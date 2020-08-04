@@ -37,10 +37,10 @@ moist <- function(kyr,temp.vec,precip.vec,fc,dry,bgs,egs,plat,clat){
 
   for(k in 1:12){
     if(temp.vec[k]<0) temp.vec[k] = 0
-    te = te + (.2 * temp.vec[k]) * 1.514 #te = temperature efficiency
+    te = te + (.2 * temp.vec[k]) ^ 1.514 #te = temperature efficiency
   }
-  
-  a = .675 * te * 3 - 77.1 * te * 2 + 17920 * te + 492390 #a = exponent of evapotranspiration function
+
+  a = .675 * te ^ 3 - 77.1 * te ^ 2 + 17920 * te + 492390 #a = exponent of evapotranspiration function
   a = .000001 * a
 
   #initialize the number of dry days (dd), and current day of year (cday)
@@ -52,17 +52,17 @@ moist <- function(kyr,temp.vec,precip.vec,fc,dry,bgs,egs,plat,clat){
   #main loop for yearly water balance calculation by month
   for(k in 1:12){
     owater = water
-    
+
     #calculate this month's rainfall
     rain = precip.vec[k]
     ttmp = temp.vec[k]
-    
+
     #calculate potential evapotranspiration (u)
     u = 1.6 * ((10*ttmp/te)^a)*clat[lat,k]
-    
+
     #calculate potential water loss this month
     pwl = rain - u
-    
+
     if(pwl < 0){ #if rain satisfies u thes month, don't draw on soil water
       #if rain doesn't satisfy u, add this month's potential water loss to accumulated potential water loss from soil
       accpwl = accpwl + pwl
@@ -75,6 +75,7 @@ moist <- function(kyr,temp.vec,precip.vec,fc,dry,bgs,egs,plat,clat){
       #calculate actual evapotranspiration (aet) if soil water is drawn down this month
       aet = aet + (rain - csm)
     } else {
+      water = owater + pwl
       if(water>=fc) water = fc
       csm = water-owater
       #if soil is partially rechared, reduce accumulated potential water loss accordingly
